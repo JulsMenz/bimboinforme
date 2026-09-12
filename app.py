@@ -9,7 +9,7 @@ st.title("📊 Panel de Control y Producción")
 st.markdown("Visualización en tiempo real del archivo de Excel institucional.")
 
 # Ruta de tu archivo excel en el repositorio
-archivo_excel = "datos_produccion.xlsx"
+archivo_excel = "informebimbo.xlsx"
 
 # Cargar todas las hojas del archivo
 try:
