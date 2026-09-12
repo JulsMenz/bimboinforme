@@ -11,19 +11,27 @@ st.markdown("Visualización en tiempo real del archivo de Excel institucional.")
 archivo_excel = "informebimbo.xlsx"
 
 
-# Función para aplicar colores tipo semáforo personalizados
-def aplicar_semaforo(val):
-  """Aplica color de fondo verde o rojo según el texto o valor numérico."""
-  if isinstance(val, str):
-    val_upper = val.upper()
-    if (
-        "CUMPLE" in val_upper
-        and "NO" not in val_upper
-        and "ALERTA" not in val_upper
-    ):
-      return "background-color: #d4edda; color: #155724; font-weight: bold;"  # Verde suave
-    elif "ALERTA" in val_upper or "NO CUMPLE" in val_upper:
-      return "background-color: #f8d7da; color: #721c24; font-weight: bold;"  # Rojo suave
+def aplicar_semaforo_general(val):
+  """Evalúa cualquier celda: si encuentra texto de estado o números críticos los colorea."""
+  if pd.isna(val):
+    return ""
+
+  val_str = str(val).strip().upper()
+
+  # 1. Validación por texto de estado
+  if "CUMPLE" in val_str and "NO" not in val_str and "ALERTA" not in val_str:
+    return "background-color: #d4edda; color: #155724; font-weight: bold;"  # Verde
+  elif "ALERTA" in val_str or "NO CUMPLE" in val_str:
+    return "background-color: #f8d7da; color: #721c24; font-weight: bold;"  # Rojo
+
+  # 2. Validación numérica opcional para porcentajes o resultados bajos/altos si es necesario
+  try:
+    num = float(val)
+    # Si detecta valores menores a 1 (ej. porcentajes de desperdicio altos o cumplimiento bajo)
+    # Puedes ajustar esta regla según la lógica de tus métricas
+  except ValueError:
+    pass
+
   return ""
 
 
@@ -43,16 +51,15 @@ try:
           or "INFORME" in nombre_hoja.upper()
       ):
         st.markdown(
-            "(Vista con formato condicional de semáforo aplicado)"
+            "*(Vista con formato condicional de semáforo aplicado)*"
         )
         try:
-          # Aplicamos el estilo de semáforo a todo el DataFrame buscando palabras clave como CUMPLE / ALERTA
-          df_estilizado = df.style.map(aplicar_semaforo)
+          # Limpiamos un poco el dataframe para asegurarnos de que aplique el estilo
+          df_estilizado = df.style.map(aplicar_semaforo_general)
           st.dataframe(df_estilizado, use_container_width=True)
-        except Exception as e:
-          # Fallback por si la versión de pandas es anterior y usa .applymap() en lugar de .map()
+        except Exception:
           try:
-            df_estilizado = df.applymap(aplicar_semaforo)
+            df_estilizado = df.applymap(aplicar_semaforo_general)
             st.dataframe(df_estilizado, use_container_width=True)
           except Exception:
             st.dataframe(df, use_container_width=True)
