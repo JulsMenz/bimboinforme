@@ -24,15 +24,29 @@ try:
       st.subheader(f"Vista de la hoja: {nombre_hoja}")
       df = excel_data[nombre_hoja]
 
-      # Mostrar la tabla de datos de la hoja correspondiente
-      st.dataframe(df, use_container_width=True)
-
-      # Si es la hoja de informe ejecutivo, puedes destacar métricas
-      if "INFORME" in nombre_hoja.upper() or "RESUMEN" in nombre_hoja.upper():
-        st.info(
-            "Sección clave del informe ejecutivo cargada correctamente desde"
-            " la nube."
+      # Si es la hoja de RESUMEN o INFORME, aplicamos estilos de semáforo
+      if (
+          "RESUMEN" in nombre_hoja.upper()
+          or "INFORME" in nombre_hoja.upper()
+      ):
+        st.markdown(
+            "(Vista con formato condicional tipo semáforo aplicado)"
         )
+
+        # Intentamos aplicar colores estilo semáforo a columnas numéricas
+        # Puedes ajustar 'cmap' (ej. 'RdYlGn' rojo-amarillo-verde o 'Greens')
+        try:
+          # st.dataframe acepta estilos de pandas Styler
+          df_estilizado = df.style.background_gradient(
+              cmap="RdYlGn", subset=df.select_dtypes(include="number").columns
+          )
+          st.dataframe(df_estilizado, use_container_width=True)
+        except Exception:
+          # Si falla por algún tipo de dato, muestra la tabla normal
+          st.dataframe(df, use_container_width=True)
+      else:
+        # Mostrar la tabla estándar para las demás hojas
+        st.dataframe(df, use_container_width=True)
 
 except Exception as e:
   st.error(
